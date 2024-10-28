@@ -29,7 +29,6 @@ fileprivate let PERSONAL_MODEL_PREFIX = "appinventor://facemesh/personal/"
   internal var _initialized = false
   private var _enabled = true
   private var _showMesh: Bool = false
-  private var _backgroundImage = ""
   private var width = 350
   private var height = 200
 
@@ -43,7 +42,7 @@ fileprivate let PERSONAL_MODEL_PREFIX = "appinventor://facemesh/personal/"
 
   @objc public init(_ container: ComponentContainer) {
     super.init(container, "facemesh", TRANSFER_MODEL_PREFIX, PERSONAL_MODEL_PREFIX)
-    registerHandler(named: "reportResult", callback: self.reportImage(dataUrl:))
+    registerHandler(named: "reportImage", callback: self.reportImage(_:))
 
     _keyPoints["forehead"] = []
     _keyPoints["leftCheek"] = []
@@ -591,10 +590,14 @@ fileprivate let PERSONAL_MODEL_PREFIX = "appinventor://facemesh/personal/"
     }
   }
 
-  @objc open func reportImage(dataUrl: String) {
-    print("reportImage \(dataUrl)")
+  @objc open func reportImage(_ args: String) {
+    guard let parsedArgs = try? JSONSerialization.jsonObject(with: Data(args.utf8), options: []) as? [String] else {
+      debugPrint("Unable to parse image arguments")
+      return
+    }
+    let dataUrl = parsedArgs[0]
     if !dataUrl.isEmpty {
-      self.BackgroundImage = String(dataUrl.dropFirst(dataUrl.firstIndex(of: ",")?.utf16Offset(in: dataUrl) ?? 0 + 1))
+      self.BackgroundImage = dataUrl
       DispatchQueue.main.async {
         self.VideoUpdated()
       }
@@ -609,9 +612,10 @@ fileprivate let PERSONAL_MODEL_PREFIX = "appinventor://facemesh/personal/"
     return String(height)
   }
 
-  @objc open func reportResult(result: String) {
+  @objc open override func onReportResult(_ result: String) {
     do {
-      let res = try JSONSerialization.jsonObject(with: Data(result.utf8), options: []) as! [String: Any]
+      let parsedResult = try JSONSerialization.jsonObject(with: Data(result.utf8), options: []) as! [String]
+      let res = try JSONSerialization.jsonObject(with: Data(parsedResult[0].utf8), options: []) as! [String: Any]
 
       func parseKeyPoints(from obj: [String: Any], keys: [String]) -> [String: [Double]] {
         var points = [String: [Double]]()
