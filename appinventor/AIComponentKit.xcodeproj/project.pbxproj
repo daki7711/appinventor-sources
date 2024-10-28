@@ -239,6 +239,9 @@
 		088CAFD020DABB2E002B1B67 /* Ball.swift in Sources */ = {isa = PBXBuildFile; fileRef = 088CAFCF20DABB2E002B1B67 /* Ball.swift */; };
 		08AB5804201AF2BA00F38C88 /* Canvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08AB5803201AF2BA00F38C88 /* Canvas.swift */; };
 		0AE0AA8744D14E11695CF2E0 /* Pods_AIComponentKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB4FA20345A0AEA4E0CB60F2 /* Pods_AIComponentKit.framework */; };
+		1509633B2CC7E1B700B688BF /* teachable_machine.html in Resources */ = {isa = PBXBuildFile; fileRef = 150963392CC7E1B700B688BF /* teachable_machine.html */; };
+		1509633C2CC7E1B700B688BF /* teachable_machine.js in Resources */ = {isa = PBXBuildFile; fileRef = 1509633A2CC7E1B700B688BF /* teachable_machine.js */; };
+		1509633E2CC7E20E00B688BF /* TeachableMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1509633D2CC7E20E00B688BF /* TeachableMachine.swift */; };
 		151EB7E2298853E400315044 /* AccessibleComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 151EB7E1298853E400315044 /* AccessibleComponent.swift */; };
 		22843757284F89DF00EC3133 /* AssetFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22843756284F89DF00EC3133 /* AssetFetcher.swift */; };
 		46E77D8E29DD6894002CCDFB /* ShowAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46E77D8D29DD6894002CCDFB /* ShowAlert.swift */; };
@@ -556,6 +559,9 @@
 		08815DB6210B532800FA89F7 /* Ev3Commands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ev3Commands.swift; sourceTree = "<group>"; };
 		088CAFCF20DABB2E002B1B67 /* Ball.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ball.swift; sourceTree = "<group>"; };
 		08AB5803201AF2BA00F38C88 /* Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.swift; sourceTree = "<group>"; };
+		150963392CC7E1B700B688BF /* teachable_machine.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = teachable_machine.html; path = ../../../../../Downloads/teachable_machine.html; sourceTree = "<group>"; };
+		1509633A2CC7E1B700B688BF /* teachable_machine.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = teachable_machine.js; path = ../../../../../Downloads/teachable_machine.js; sourceTree = "<group>"; };
+		1509633D2CC7E20E00B688BF /* TeachableMachine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeachableMachine.swift; sourceTree = "<group>"; };
 		151EB7E1298853E400315044 /* AccessibleComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AccessibleComponent.swift; sourceTree = "<group>"; };
 		22843756284F89DF00EC3133 /* AssetFetcher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AssetFetcher.swift; sourceTree = "<group>"; };
 		32349630B8B4D40D05FB295A /* Pods-AIComponentKitTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AIComponentKitTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-AIComponentKitTests/Pods-AIComponentKitTests.release.xcconfig"; sourceTree = "<group>"; };
@@ -769,6 +775,7 @@
 				069D1C692C9C4FBF00C0CA96 /* assets */,
 				067BBEF02C480CEF0058B1BD /* BaseAiComponent.swift */,
 				069D1CE62C9DA49A00C0CA96 /* BaseClassifier.swift */,
+				1509633D2CC7E20E00B688BF /* TeachableMachine.swift */,
 				067BBEF12C480CEF0058B1BD /* PersonalImageClassifier.swift */,
 			);
 			name = extensions;
@@ -777,6 +784,7 @@
 		069D1C692C9C4FBF00C0CA96 /* assets */ = {
 			isa = PBXGroup;
 			children = (
+				150963382CC7E19200B688BF /* TeachableMachine */,
 				069D1CE52C9C50BE00C0CA96 /* PersonalImageClassifier */,
 				069D1C982C9C4FF000C0CA96 /* mobilenet_group1-shard1of1 */,
 				069D1C802C9C4FEF00C0CA96 /* mobilenet_group2-shard1of1 */,
@@ -1188,6 +1196,15 @@
 			path = util;
 			sourceTree = "<group>";
 		};
+		150963382CC7E19200B688BF /* TeachableMachine */ = {
+			isa = PBXGroup;
+			children = (
+				150963392CC7E1B700B688BF /* teachable_machine.html */,
+				1509633A2CC7E1B700B688BF /* teachable_machine.js */,
+			);
+			name = TeachableMachine;
+			sourceTree = "<group>";
+		};
 		681D59032A84137D007B5DB5 /* common */ = {
 			isa = PBXGroup;
 			children = (
@@ -1397,6 +1414,7 @@
 				061DC7B4223C396000539213 /* classic_button.disabled.png in Resources */,
 				069D1CC92C9C4FF000C0CA96 /* mobilenet_group48-shard1of1 in Resources */,
 				069D1CB42C9C4FF000C0CA96 /* mobilenet_group18-shard1of1 in Resources */,
+				1509633B2CC7E1B700B688BF /* teachable_machine.html in Resources */,
 				069D1CD92C9C4FF000C0CA96 /* mobilenet_group33-shard1of1 in Resources */,
 				060395451F342ADE006D6E66 /* language-codes.plist in Resources */,
 				069D1CBD2C9C4FF000C0CA96 /* mobilenet_group32-shard1of1 in Resources */,
@@ -1414,6 +1432,7 @@
 				069D1CB52C9C4FF000C0CA96 /* mobilenet_group17-shard1of1 in Resources */,
 				DE962F6220ADCD7D004AA45A /* append_script in Resources */,
 				060395461F342ADE006D6E66 /* iso3166_1_2_to_iso3166_1_3.plist in Resources */,
+				1509633C2CC7E1B700B688BF /* teachable_machine.js in Resources */,
 				069D1CC42C9C4FF000C0CA96 /* mobilenet_group30-shard1of1 in Resources */,
 				069D1CB72C9C4FF000C0CA96 /* mobilenet_group46-shard1of1 in Resources */,
 				DE5CBD281FE36C8B00F5EDDE /* webviewer.js in Resources */,
@@ -1676,6 +1695,7 @@
 				06EF265A2998A94600D6093C /* ComponentUtil.swift in Sources */,
 				043ACD8B20104F52002C74DD /* DatePicker.swift in Sources */,
 				0644F6C21F37D20700642E4D /* LifecycleDelegate.swift in Sources */,
+				1509633E2CC7E20E00B688BF /* TeachableMachine.swift in Sources */,
 				06D151E81DC4FE2A00FC981E /* ElementsUtil.swift in Sources */,
 				080C7FE321077707007C94A8 /* Ev3ResponseManager.swift in Sources */,
 				064884D621E682EA0086411C /* iOS9Util.swift in Sources */,
