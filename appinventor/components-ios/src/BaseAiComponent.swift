@@ -126,7 +126,7 @@ fileprivate let MODEL_PATH_SUFFIX = ".mdl"
 
   // MARK: Private Implementation
 
-  open func configureWebView(_ webview: WKWebView) {
+  open func configureWebView(_ webview: WKWebView, _ extras: String? = nil) {
     debugPrint("configurewebview called")
     _webview = webview
     let fqcn = "\(type(of: self))"
@@ -143,6 +143,9 @@ fileprivate let MODEL_PATH_SUFFIX = ".mdl"
         })
       },
       """
+    }
+    if let extras = extras {
+      source += extras
     }
     source += "}\n"
     debugPrint(source)

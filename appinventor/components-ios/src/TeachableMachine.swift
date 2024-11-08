@@ -10,38 +10,36 @@ import Foundation
 import UIKit
 import WebKit
 
-fileprivate let TRANSFER_MODEL_PREFIX = "appinventor://teachable_machine/transfer/"
-fileprivate let PERSONAL_MODEL_PREFIX = "appinventor://teachable_machine/personal/"
+fileprivate let TRANSFER_MODEL_PREFIX = "appinventor://teachable-machine/transfer/"
+fileprivate let PERSONAL_MODEL_PREFIX = "appinventor://teachable-machine/personal/"
 
-class TeachableMachine: BaseClassifier, LifecycleDelegate {
+@objc open class TeachableMachine: BaseClassifier, LifecycleDelegate {
   public static let MODE_VIDEO = "Video"
   public static let MODE_IMAGE = "Image"
   public static let IMAGE_WIDTH = 500
   public static let ERROR_INVALID_INPUT_MODE = -6;
 
-
   private let logTag = "TeachableMachine"
   private let modelURL = "https://teachablemachine.withgoogle.com/models/"
-  private var webView: WKWebView?
-  private var _modelPath: String?
+
   private var _inputMode = TeachableMachine.MODE_VIDEO
-  private var labels: [String] = []
+  private var _modelLink: String?
   private var _running = false
-  private var _minClassTime = 0
+  private var _minClassTime: Int32 = 0
 
   @objc public init(_ container: ComponentContainer) {
     super.init(container, "teachable_machine", TRANSFER_MODEL_PREFIX, PERSONAL_MODEL_PREFIX)
   }
 
-  func initialize() {
-    guard let webView = webView else {
+  @objc public override func Initialize() {
+    super.Initialize()
+    guard let webview = _webview else {
       print("\(logTag): WebViewer is not set")
       return
     }
 
-    if let modelPath = _modelPath {
-      let js = "loadModel('\(modelPath)');"
-      webView.evaluateJavaScript(js, completionHandler: nil)
+    if let modelLink = _modelLink {
+      webview.evaluateJavaScript("TeachableMachine.isLoaded = function() { return \"\(modelLink)\" },")
     } else {
       print("\(logTag): Model file is not provided")
     }
@@ -49,7 +47,7 @@ class TeachableMachine: BaseClassifier, LifecycleDelegate {
 
   @objc public var ModelLink: String? {
     get {
-      return self._modelPath
+      return _modelLink
     }
     set {
       guard let link = newValue else {
@@ -58,59 +56,47 @@ class TeachableMachine: BaseClassifier, LifecycleDelegate {
       }
       print("\(logTag): Model Link: \(link)")
       if link.contains(modelURL) {
-        self._modelPath = link
+        _modelLink = link
       } else {
-        // Handle invalid model link
         print("\(logTag): Incorrect Model Link: The link should look like \(modelURL)")
-        showError("Incorrect Model Link: The link should look like \(modelURL)")
       }
     }
+  }
+
+  open override func configureWebView(_ webview: WKWebView, _ extras: String? = nil) {
+    let modelLink = _modelLink ?? ""
+    super.configureWebView(webview, "isLoaded: function() { return \"\(modelLink)\" },\n")
   }
 
   @objc public var InputMode: String {
     get {
-      return self._inputMode
+      return _inputMode
     }
     set {
-      print("\(logTag): INPUT MODE RUN")
-      guard let webView = self.webView else {
-        self._inputMode = newValue
-        return
-      }
-      switch newValue.lowercased() {
-      case "video":
-        webView.evaluateJavaScript("setInputMode('video');", completionHandler: nil)
-        self._inputMode = TeachableMachine.MODE_VIDEO
-      case "image":
-        webView.evaluateJavaScript("setInputMode('image');", completionHandler: nil)
-        self._inputMode = TeachableMachine.MODE_IMAGE
-      default:
-        print("\(logTag): Invalid input mode \(newValue)")
-        // Handle error: Display alert or another appropriate error handling mechanism
-        showError("Invalid input mode. Valid values are 'Video' or 'Image'.")
+      if newValue.caseInsensitiveCompare(TeachableMachine.MODE_VIDEO) == .orderedSame {
+        _webview?.evaluateJavaScript("setInputMode(\"video\");", completionHandler: nil)
+        _inputMode = TeachableMachine.MODE_VIDEO
+      } else if newValue.caseInsensitiveCompare(TeachableMachine.MODE_IMAGE) == .orderedSame {
+        _webview?.evaluateJavaScript("setInputMode(\"image\");", completionHandler: nil)
+        _inputMode = TeachableMachine.MODE_IMAGE
+      } else {
+        _form?.dispatchErrorOccurredEvent(self, "InputMode", ErrorMessage.ERROR_INPUT_MODE, TeachableMachine.ERROR_INVALID_INPUT_MODE, "Invalid input mode \(newValue)")
       }
     }
   }
 
-  // Computed property for running state
-  @objc public var Running: Bool {
-    get {
-      return _running
-    }
-    set(newRunningState) {
-      _running = newRunningState
-      // Additional actions can be performed here when the state changes.
-    }
-  }
-
-  @objc public var MinimumInterval: Int {
+  @objc public var MinimumInterval: Int32 {
     get {
       return _minClassTime
     }
     set {
       _minClassTime = newValue
-      webView?.evaluateJavaScript("minClassTime = \(newValue);", completionHandler: nil)
+      _webview?.evaluateJavaScript("minClassTime = \(newValue);", completionHandler: nil)
     }
+  }
+
+  @objc public var Running: Bool {
+    return _running
   }
 
   @objc public func ClassifyImageData(_ imagePath: String?) {
@@ -127,8 +113,8 @@ class TeachableMachine: BaseClassifier, LifecycleDelegate {
     print(imagePath)
     var scaledImageBitmap: UIImage? = nil
     if let image = UIImage(named: imagePath) {
-      let width = PersonalImageClassifier.IMAGE_WIDTH
-      let height = Int(image.size.height * CGFloat(PersonalImageClassifier.IMAGE_WIDTH) / image.size.width)
+      let width = TeachableMachine.IMAGE_WIDTH
+      let height = Int(image.size.height * CGFloat(TeachableMachine.IMAGE_WIDTH) / image.size.width)
 
       UIGraphicsBeginImageContext(CGSize(width: width, height: height))
       image.draw(in: CGRect(x: 0, y: 0, width: width, height: height))
@@ -191,13 +177,27 @@ class TeachableMachine: BaseClassifier, LifecycleDelegate {
     }
   }
 
-  private func showError(_ message: String) {
-    DispatchQueue.main.async {
-      let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
-      alert.addAction(UIAlertAction(title: "OK", style: .default))
-      if let topController = UIApplication.shared.keyWindow?.rootViewController {
-        topController.present(alert, animated: true, completion: nil)
-      }
+  @objc public override func ClassifierReady() {
+    InputMode = _inputMode
+    MinimumInterval = _minClassTime
+    super.ClassifierReady()
+  }
+
+  @objc public func onPause() {
+    if let webview = _webview, _inputMode == TeachableMachine.MODE_VIDEO {
+      webview.evaluateJavaScript("stopVideo();", completionHandler: nil)
+    }
+  }
+
+  @objc public func onResume() {
+    if let webview = _webview, _inputMode == TeachableMachine.MODE_VIDEO {
+      webview.evaluateJavaScript("startVideo();", completionHandler: nil)
+    }
+  }
+
+  @objc public func onClear() {
+    if let webview = _webview, _inputMode == TeachableMachine.MODE_VIDEO {
+      webview.evaluateJavaScript("stopVideo();", completionHandler: nil)
     }
   }
 }
