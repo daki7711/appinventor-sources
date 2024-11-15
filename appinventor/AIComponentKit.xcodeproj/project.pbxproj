@@ -559,8 +559,8 @@
 		08815DB6210B532800FA89F7 /* Ev3Commands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ev3Commands.swift; sourceTree = "<group>"; };
 		088CAFCF20DABB2E002B1B67 /* Ball.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ball.swift; sourceTree = "<group>"; };
 		08AB5803201AF2BA00F38C88 /* Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.swift; sourceTree = "<group>"; };
-		150963392CC7E1B700B688BF /* teachable_machine.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = teachable_machine.html; path = ../../../../../Downloads/teachable_machine.html; sourceTree = "<group>"; };
-		1509633A2CC7E1B700B688BF /* teachable_machine.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = teachable_machine.js; path = ../../../../../Downloads/teachable_machine.js; sourceTree = "<group>"; };
+		150963392CC7E1B700B688BF /* teachable_machine.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = teachable_machine.html; path = "components-common/src/TeachableMachine/teachable_machine.html"; sourceTree = SOURCE_ROOT; };
+		1509633A2CC7E1B700B688BF /* teachable_machine.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = teachable_machine.js; path = "components-common/src/TeachableMachine/teachable_machine.js"; sourceTree = SOURCE_ROOT; };
 		1509633D2CC7E20E00B688BF /* TeachableMachine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeachableMachine.swift; sourceTree = "<group>"; };
 		151EB7E1298853E400315044 /* AccessibleComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AccessibleComponent.swift; sourceTree = "<group>"; };
 		22843756284F89DF00EC3133 /* AssetFetcher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AssetFetcher.swift; sourceTree = "<group>"; };
