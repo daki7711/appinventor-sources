@@ -77,6 +77,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.HashSet;
 
 /**
  * A two-dimensional touch-sensitive rectangular panel on which drawing can
@@ -146,6 +147,34 @@ public final class Canvas extends AndroidViewComponent implements ComponentConta
   // something has been drawn on it.
   private boolean drawn;
 
+  // =========================================================================
+  // SPATIAL PARTITIONING CONFIG
+  // =========================================================================
+  private int cellSize = 64; // Default, will be recalculated
+
+  // Maps a grid key "x,y" to a Set of Sprites in that cell
+  private final java.util.Map<String, Set<Sprite>> buckets = new java.util.HashMap<String, Set<Sprite>>();
+
+  // Helper to generate the key for the HashMap
+  private String getBucketKey(int cellX, int cellY) {
+    return cellX + "," + cellY;
+  }
+
+  // We optimize the cell size to be roughly 1/8th or 1/16th of the screen.
+  // This ensures we have a good density of cells (roughly 8x8 or 16x16 grid).
+  private void recomputeCellSize() {
+    // Avoid division by zero
+    int w = Math.max(1, view.getWidth());
+    int h = Math.max(1, view.getHeight());
+
+    // Heuristic: We want roughly a 10x10 grid on screen.
+    // We clamp it between 32 (don't go too small) and 200 (don't go too big).
+    int idealSize = Math.min(w, h) / 10;
+    cellSize = Math.max(32, Math.min(200, idealSize));
+
+    // Since cellSize changed, we must rebuild the entire grid
+    resizeGrid();
+  }
   // Variables behind properties
   private int paintColor;
   private final Paint paint;
@@ -524,6 +553,7 @@ public final class Canvas extends AndroidViewComponent implements ComponentConta
         // Specifically, it says we need to regenerate the bitmap representing
         // the background color/image if a call to GetColor() is made.
         scaledBackgroundBitmap = null;
+        recomputeCellSize();
       }
     }
 
@@ -843,6 +873,8 @@ public final class Canvas extends AndroidViewComponent implements ComponentConta
 
     // Add to end if it has the highest Z value.
     sprites.add(sprite);
+    // Force an update to place the sprite in the correct bucket immediately
+    updateSpriteBucket(sprite);
   }
 
   /**
@@ -852,6 +884,27 @@ public final class Canvas extends AndroidViewComponent implements ComponentConta
    */
   void removeSprite(Sprite sprite) {
     sprites.remove(sprite);
+
+    // Check if the sprite was actually inside the grid
+    if (sprite.gridMinX != Integer.MIN_VALUE) {
+
+      // Loop through EVERY bucket the sprite was sitting in and remove it
+      for (int i = sprite.gridMinX; i <= sprite.gridMaxX; i++) {
+        for (int j = sprite.gridMinY; j <= sprite.gridMaxY; j++) {
+
+          String key = getBucketKey(i, j);
+
+          if (buckets.containsKey(key)) {
+            buckets.get(key).remove(sprite);
+
+            // Clean up: If the bucket is now empty, delete it to save memory
+            if (buckets.get(key).isEmpty()) {
+              buckets.remove(key);
+            }
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -911,11 +964,66 @@ public final class Canvas extends AndroidViewComponent implements ComponentConta
    */
   void registerChange(Sprite sprite) {
     view.invalidate();
+    updateSpriteBucket(sprite);
     findSpriteCollisions(sprite);
   }
 
 
   // Methods for detecting collisions
+
+  private void updateSpriteBucket(Sprite sprite) {
+    // 1. Calculate the NEW range of cells this sprite covers
+    // We access xLeft/yTop directly (protected fields) for accuracy
+    // Note: We use a small epsilon or Math.floor to handle edge cases
+    int newMinX = (int) Math.floor(sprite.xLeft / cellSize);
+    int newMaxX = (int) Math.floor((sprite.xLeft + sprite.Width()) / cellSize);
+    int newMinY = (int) Math.floor(sprite.yTop / cellSize);
+    int newMaxY = (int) Math.floor((sprite.yTop + sprite.Height()) / cellSize);
+
+    // 2. Check if the range has changed
+    if (newMinX != sprite.gridMinX || newMaxX != sprite.gridMaxX ||
+            newMinY != sprite.gridMinY || newMaxY != sprite.gridMaxY) {
+
+      // A. Remove from OLD buckets
+      if (sprite.gridMinX != Integer.MIN_VALUE) {
+        for (int i = sprite.gridMinX; i <= sprite.gridMaxX; i++) {
+          for (int j = sprite.gridMinY; j <= sprite.gridMaxY; j++) {
+            String key = getBucketKey(i, j);
+            if (buckets.containsKey(key)) {
+              buckets.get(key).remove(sprite);
+              if (buckets.get(key).isEmpty()) buckets.remove(key);
+            }
+          }
+        }
+      }
+
+      // B. Add to NEW buckets
+      for (int i = newMinX; i <= newMaxX; i++) {
+        for (int j = newMinY; j <= newMaxY; j++) {
+          String key = getBucketKey(i, j);
+          if (!buckets.containsKey(key)) {
+            buckets.put(key, new HashSet<Sprite>());
+          }
+          buckets.get(key).add(sprite);
+        }
+      }
+
+      // C. Update Sprite state
+      sprite.gridMinX = newMinX;
+      sprite.gridMaxX = newMaxX;
+      sprite.gridMinY = newMinY;
+      sprite.gridMaxY = newMaxY;
+    }
+  }
+
+  // Helper to rebuild grid if cellSize changes
+  private void resizeGrid() {
+    buckets.clear();
+    for (Sprite s : sprites) {
+      s.gridMinX = Integer.MIN_VALUE; // Force reset
+      updateSpriteBucket(s);
+    }
+  }
 
   /**
    * Checks if the given sprite now overlaps with or abuts any other sprite
@@ -933,31 +1041,55 @@ public final class Canvas extends AndroidViewComponent implements ComponentConta
    * @param movedSprite the sprite that has just changed position
    */
   protected void findSpriteCollisions(Sprite movedSprite) {
-    for (Sprite sprite : sprites) {
+    Set<Sprite> candidates = new HashSet<Sprite>();
+
+    // 1. Gather all potential collisions from the grid buckets
+    // We check every bucket that the movedSprite currently touches.
+    for (int i = movedSprite.gridMinX; i <= movedSprite.gridMaxX; i++) {
+      for (int j = movedSprite.gridMinY; j <= movedSprite.gridMaxY; j++) {
+        String key = getBucketKey(i, j);
+        if (buckets.containsKey(key)) {
+          candidates.addAll(buckets.get(key));
+        }
+      }
+    }
+
+    // 2. Iterate through ONLY the nearby candidates
+    for (Sprite sprite : candidates) {
       if (sprite != movedSprite) {
+        // --- START OF ORIGINAL LOGIC ---
+
         // Check whether we already raised an event for their collision.
         if (movedSprite.CollidingWith(sprite)) {
-          // If they no longer conflict, note that.
+
+          // Case A: They were colliding, but now they might have stopped.
+          // (One became invisible, disabled, or they physically moved apart)
           if (!movedSprite.Visible() || !movedSprite.Enabled() ||
-              !sprite.Visible() || !sprite.Enabled() ||
-              !Sprite.colliding(sprite, movedSprite)) {
+                  !sprite.Visible() || !sprite.Enabled() ||
+                  !Sprite.colliding(sprite, movedSprite)) {
+
             movedSprite.NoLongerCollidingWith(sprite);
             sprite.NoLongerCollidingWith(movedSprite);
+
           } else {
-            // If they still conflict, do nothing.
+            // They still conflict, do nothing.
           }
         } else {
-          // Check if they now conflict.
+
+          // Case B: They were NOT colliding, check if they are now.
           if (movedSprite.Visible() && movedSprite.Enabled() &&
-              sprite.Visible() && sprite.Enabled() &&
-              Sprite.colliding(sprite, movedSprite)) {
+                  sprite.Visible() && sprite.Enabled() &&
+                  Sprite.colliding(sprite, movedSprite)) {
+
             // If so, raise two CollidedWith events.
             movedSprite.CollidedWith(sprite);
             sprite.CollidedWith(movedSprite);
+
           } else {
-            // If they still don't conflict, do nothing.
+            // They still don't conflict, do nothing.
           }
         }
+        // --- END OF ORIGINAL LOGIC ---
       }
     }
   }

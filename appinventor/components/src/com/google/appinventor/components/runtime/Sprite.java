@@ -82,6 +82,17 @@ public abstract class Sprite extends VisibleComponent
   protected double xOrigin;   // x-coordinate of origin
   protected double yOrigin;   // y-coordinate of origin
 
+  // =========================================================================
+  // SPATIAL PARTITIONING: MULTI-CELL SUPPORT
+  // =========================================================================
+  // We track the range of grid cells this sprite overlaps.
+  // Integer.MIN_VALUE indicates the sprite is not currently in the grid.
+  public int gridMinX = Integer.MIN_VALUE;
+  public int gridMinY = Integer.MIN_VALUE;
+  public int gridMaxX = Integer.MIN_VALUE;
+  public int gridMaxY = Integer.MIN_VALUE;
+  // =========================================================================
+
   // Unit coordinates of the origin wrt top left corner. Added for custom origin support.
   // In the designer u -> OriginX and v -> OriginY
   // (u, v) = (0, 0)      | Top - Left Corner
