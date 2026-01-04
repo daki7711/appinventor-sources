@@ -7,50 +7,6 @@ suite('Multiselect', function() {
     Blockly.common.setSelected(null);
   });
 
-  function shift(type) {
-    workspace.getCanvas().dispatchEvent(new KeyboardEvent(type, { key: 'shift', bubbles: true }));
-  }
-
-  function ctrl(key) {
-    const keyCode = key.toUpperCase().charCodeAt(0);
-    const options = { key: key, keyCode: keyCode, ctrlKey: true, bubbles: true };
-    workspace.getCanvas().dispatchEvent(new KeyboardEvent('keydown', options));
-    workspace.getCanvas().dispatchEvent(new KeyboardEvent('keyup', options));
-  }
-
-  function del() {
-    workspace.getCanvas().dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', keyCode: 46, bubbles: true }));
-    workspace.getCanvas().dispatchEvent(new KeyboardEvent('keyup', { key: 'Delete', keyCode: 46, bubbles: true }));
-  }
-
-  function select(block) {
-    const blockPath = block.getSvgRoot().querySelector('path.blocklyPath');
-    const blockRect = blockPath.getBoundingClientRect();
-    const blockCenter = {
-      clientX: blockRect.left + blockRect.width / 2,
-      clientY: blockRect.top + blockRect.height / 2
-    };
-
-    blockPath.dispatchEvent(new PointerEvent('pointerdown', { ...blockCenter, bubbles: true }));
-    blockPath.dispatchEvent(new PointerEvent('pointerup', { ...blockCenter, bubbles: true }));
-  }
-
-  async function events(type, count) {
-    return new Promise(resolve => {
-      let received = 0;
-      const listener = (event) => {
-        if (event.type === type) {
-          received++;
-          if (received === count) {
-            workspace.removeChangeListener(listener);
-            resolve();
-          }
-        }
-      };
-      workspace.addChangeListener(listener);
-    });
-  }
-
   test('copy/paste blocks', async function() {
     const block1 = Blockly.clipboard.paste({
       paster: 'block',
@@ -67,10 +23,10 @@ suite('Multiselect', function() {
     select(block1);
     select(block2);
     shift('keyup');
-    await events(Blockly.Events.SELECTED, 2);
+    await until(Blockly.Events.SELECTED, 2);
     ctrl('c');
     ctrl('v');
-    await events(Blockly.Events.BLOCK_CREATE, 2);
+    await until(Blockly.Events.BLOCK_CREATE, 2);
     chai.assert.equal(workspace.getAllBlocks().length, 4);
   });
 
@@ -90,12 +46,12 @@ suite('Multiselect', function() {
     select(block1);
     select(block2);
     shift('keyup');
-    await events(Blockly.Events.SELECTED, 2);
+    await until(Blockly.Events.SELECTED, 2);
     ctrl('x');
-    await events(Blockly.Events.BLOCK_DELETE, 2);
+    await until(Blockly.Events.BLOCK_DELETE, 2);
     chai.assert.equal(workspace.getAllBlocks().length, 0);
     ctrl('v');
-    await events(Blockly.Events.BLOCK_CREATE, 2);
+    await until(Blockly.Events.BLOCK_CREATE, 2);
     chai.assert.equal(workspace.getAllBlocks().length, 2);
   });
 
@@ -115,9 +71,9 @@ suite('Multiselect', function() {
     select(block1);
     select(block2);
     shift('keyup');
-    await events(Blockly.Events.SELECTED, 2);
+    await until(Blockly.Events.SELECTED, 2);
     del();
-    await events(Blockly.Events.BLOCK_DELETE, 2);
+    await until(Blockly.Events.BLOCK_DELETE, 2);
     chai.assert.equal(workspace.getAllBlocks().length, 0);
   });
 
@@ -137,14 +93,14 @@ suite('Multiselect', function() {
     select(block1);
     select(block2);
     shift('keyup');
-    await events(Blockly.Events.SELECTED, 2);
+    await until(Blockly.Events.SELECTED, 2);
     del();
-    await events(Blockly.Events.BLOCK_DELETE, 2);
+    await until(Blockly.Events.BLOCK_DELETE, 2);
     ctrl('z');
-    await events(Blockly.Events.BLOCK_CREATE, 2);
+    await until(Blockly.Events.BLOCK_CREATE, 2);
     chai.assert.equal(workspace.getAllBlocks().length, 2);
     ctrl('y');
-    await events(Blockly.Events.BLOCK_DELETE, 2);
+    await until(Blockly.Events.BLOCK_DELETE, 2);
     chai.assert.equal(workspace.getAllBlocks().length, 0);
   });
 });
