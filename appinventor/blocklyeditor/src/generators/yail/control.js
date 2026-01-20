@@ -210,16 +210,7 @@ AI.Yail.forBlock['for_lexical_variable_get'] = function(block, generator) {
 AI.Yail.forBlock['controls_while'] = function(block, generator) {
   // While condition.
   var test = generator.valueToCode(block, 'TEST', AI.Yail.ORDER_NONE) || AI.Yail.YAIL_FALSE;
-
-  // In Blockly v11, we need to manually handle chained statements
-  var toDo = '';
-  var doBlock = block.getInputTargetBlock('DO');
-  while (doBlock) {
-    toDo += generator.blockToCode(doBlock);
-    doBlock = doBlock.getNextBlock();
-  }
-  toDo = toDo || AI.Yail.YAIL_FALSE;
-
+  var toDo = generator.statementToCode(block, 'DO') || AI.Yail.YAIL_FALSE;
   var code = AI.Yail.YAIL_WHILE + test + AI.Yail.YAIL_SPACER + AI.Yail.YAIL_BEGIN + toDo + AI.Yail.YAIL_CLOSE_COMBINATION + AI.Yail.YAIL_CLOSE_COMBINATION;
   return code;
 };
