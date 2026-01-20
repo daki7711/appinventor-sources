@@ -38,35 +38,28 @@
 goog.provide('AI.Yail.control');
 
 AI.Yail.forBlock['controls_if'] = function(block, generator) {
-
   var code = "";
-  for(var i=0;i<block.elseifCount_ + 1;i++){
-    var argument = generator.valueToCode(block, 'IF'+ i, AI.Yail.ORDER_NONE) || AI.Yail.YAIL_FALSE;
-    var branch = '';
-    var doBlock = block.getInputTargetBlock('DO' + i);
-    while (doBlock) {
-      branch += generator.blockToCode(doBlock);
-      doBlock = doBlock.getNextBlock();
-    }
-    branch = branch || AI.Yail.YAIL_FALSE;
+
+  // Loop through IF and all ELSEIF inputs
+  for(var i = 0; i < block.elseifCount_ + 1; i++){
+      var argument = generator.valueToCode(block, 'IF'+ i, AI.Yail.ORDER_NONE) || AI.Yail.YAIL_FALSE;
+      var branch = generator.statementToCode(block, 'DO'+ i) || AI.Yail.YAIL_FALSE;
+
     if(i != 0) {
       code += AI.Yail.YAIL_SPACER + AI.Yail.YAIL_BEGIN;
     }
     code += AI.Yail.YAIL_IF + argument + AI.Yail.YAIL_SPACER + AI.Yail.YAIL_BEGIN
       + branch + AI.Yail.YAIL_CLOSE_COMBINATION;
   }
+
+  // Handle the ELSE input
   if(block.elseCount_ == 1){
-    var branch = '';
-    var elseBlock = block.getInputTargetBlock('ELSE');
-    while (elseBlock) {
-      branch += generator.blockToCode(elseBlock);
-      elseBlock = elseBlock.getNextBlock();
-    }
-    branch = branch || AI.Yail.YAIL_FALSE;
+    var branch = generator.statementToCode(block, 'ELSE') || AI.Yail.YAIL_FALSE;
     code += AI.Yail.YAIL_SPACER + AI.Yail.YAIL_BEGIN + branch + AI.Yail.YAIL_CLOSE_COMBINATION;
   }
 
-  for(var i=0;i<block.elseifCount_;i++){
+  // Close parentheses for nested definitions
+  for(var i = 0; i < block.elseifCount_; i++){
     code += AI.Yail.YAIL_CLOSE_COMBINATION + AI.Yail.YAIL_CLOSE_COMBINATION;
   }
   code += AI.Yail.YAIL_CLOSE_COMBINATION;
@@ -96,16 +89,10 @@ AI.Yail.forBlock['controls_forEach'] = function(block, generator) {
   emptyListCode += AI.Yail.YAIL_CLOSE_COMBINATION;
   emptyListCode += AI.Yail.YAIL_SPACER + AI.Yail.YAIL_DOUBLE_QUOTE + "make a list" + AI.Yail.YAIL_DOUBLE_QUOTE + AI.Yail.YAIL_CLOSE_COMBINATION;
 
-
   var loopIndexName = AI.Yail.YAIL_LOCAL_VAR_TAG + block.getFieldValue('VAR');
   var listCode = generator.valueToCode(block, 'LIST', AI.Yail.ORDER_NONE) || emptyListCode;
-  var bodyCode = '';
-  var doBlock = block.getInputTargetBlock('DO');
-  while (doBlock) {
-    bodyCode += generator.blockToCode(doBlock);
-    doBlock = doBlock.getNextBlock();
-  }
-  bodyCode = bodyCode || AI.Yail.YAIL_FALSE;
+  var bodyCode = generator.statementToCode(block, 'DO') || AI.Yail.YAIL_FALSE;
+
   return AI.Yail.YAIL_FOREACH + loopIndexName + AI.Yail.YAIL_SPACER
          + AI.Yail.YAIL_BEGIN + bodyCode + AI.Yail.YAIL_CLOSE_COMBINATION + AI.Yail.YAIL_SPACER
          + listCode + AI.Yail.YAIL_CLOSE_COMBINATION;
@@ -132,13 +119,7 @@ AI.Yail.forBlock['controls_for_each_dict'] = function(block, gen) {
   var letCode = yail.YAIL_LET + yail.YAIL_OPEN_COMBINATION + yail.YAIL_SPACER
       + setKeyCode + yail.YAIL_SPACER + setValueCode
       + yail.YAIL_CLOSE_COMBINATION;
-  var bodyCode = '';
-  var doBlock = block.getInputTargetBlock('DO');
-  while (doBlock) {
-    bodyCode += gen.blockToCode(doBlock);
-    doBlock = doBlock.getNextBlock();
-  }
-  bodyCode = bodyCode || yail.YAIL_FALSE;
+  var bodyCode = gen.statementToCode(block, 'DO') || yail.YAIL_FALSE;
   var dictionaryCode = gen.valueToCode(block, 'DICT', yail.ORDER_NONE)
       || yail.YAIL_EMPTY_DICT;
 
@@ -189,13 +170,7 @@ AI.Yail.forBlock['controls_forRange'] = function(block, generator) {
   var startCode = generator.valueToCode(block, 'START', AI.Yail.ORDER_NONE) || 0;
   var endCode = generator.valueToCode(block, 'END', AI.Yail.ORDER_NONE) || 0;
   var stepCode = generator.valueToCode(block, 'STEP', AI.Yail.ORDER_NONE) || 0;
-  var bodyCode = '';
-  var doBlock = block.getInputTargetBlock('DO');
-  while (doBlock) {
-    bodyCode += generator.blockToCode(doBlock);
-    doBlock = doBlock.getNextBlock();
-  }
-  bodyCode = bodyCode || AI.Yail.YAIL_FALSE;
+  var bodyCode = generator.statementToCode(block, 'DO') || AI.Yail.YAIL_FALSE;
   return AI.Yail.YAIL_FORRANGE + loopIndexName + AI.Yail.YAIL_SPACER
          + AI.Yail.YAIL_BEGIN + bodyCode + AI.Yail.YAIL_CLOSE_COMBINATION + AI.Yail.YAIL_SPACER
          + startCode + AI.Yail.YAIL_SPACER
@@ -217,13 +192,7 @@ AI.Yail.forBlock['controls_while'] = function(block, generator) {
 
 // [lyn, 01/15/2013] Added
 AI.Yail.forBlock['controls_do_then_return'] = function(block, generator) {
-  var stm = '';
-  var stmBlock = block.getInputTargetBlock('STM');
-  while (stmBlock) {
-    stm += generator.blockToCode(stmBlock);
-    stmBlock = stmBlock.getNextBlock();
-  }
-  stm = stm || AI.Yail.YAIL_FALSE;
+  var stm = generator.statementToCode(block, 'STM') || AI.Yail.YAIL_FALSE;
   var value = generator.valueToCode(block, 'VALUE', AI.Yail.ORDER_NONE) || AI.Yail.YAIL_FALSE;
   var code = AI.Yail.YAIL_BEGIN + stm + AI.Yail.YAIL_SPACER + value + AI.Yail.YAIL_CLOSE_COMBINATION;
   return [code, AI.Yail.ORDER_ATOMIC];
