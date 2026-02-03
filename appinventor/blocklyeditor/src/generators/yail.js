@@ -771,9 +771,9 @@ AI.Yail.YailCallYialPrimitive = function(procedureName, argCodes, argTypes, disp
  * @param {boolean=} opt_thisOnly True to generate code for this block only (no attached blocks).
  * @return {string|!Array} Generated code.
  */
-AI.Yail.blockToCode = function(block, opt_thisOnly) {
-  return AI.Yail.__proto__.blockToCode.call(AI.Yail, block, opt_thisOnly);
-};
+//AI.Yail.blockToCode = function(block, opt_thisOnly) {
+//  return AI.Yail.__proto__.blockToCode.call(AI.Yail, block, opt_thisOnly);
+//};
 
 /**
  * Generates YAIL that will unregister an event if the corresponding block is disabled in the

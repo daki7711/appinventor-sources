@@ -39,12 +39,9 @@ goog.provide('AI.Yail.control');
 
 AI.Yail.forBlock['controls_if'] = function(block, generator) {
   var code = "";
-
-  // Loop through IF and all ELSEIF inputs
   for(var i = 0; i < block.elseifCount_ + 1; i++){
       var argument = generator.valueToCode(block, 'IF'+ i, AI.Yail.ORDER_NONE) || AI.Yail.YAIL_FALSE;
       var branch = generator.statementToCode(block, 'DO'+ i) || AI.Yail.YAIL_FALSE;
-
     if(i != 0) {
       code += AI.Yail.YAIL_SPACER + AI.Yail.YAIL_BEGIN;
     }
@@ -92,7 +89,6 @@ AI.Yail.forBlock['controls_forEach'] = function(block, generator) {
   var loopIndexName = AI.Yail.YAIL_LOCAL_VAR_TAG + block.getFieldValue('VAR');
   var listCode = generator.valueToCode(block, 'LIST', AI.Yail.ORDER_NONE) || emptyListCode;
   var bodyCode = generator.statementToCode(block, 'DO') || AI.Yail.YAIL_FALSE;
-
   return AI.Yail.YAIL_FOREACH + loopIndexName + AI.Yail.YAIL_SPACER
          + AI.Yail.YAIL_BEGIN + bodyCode + AI.Yail.YAIL_CLOSE_COMBINATION + AI.Yail.YAIL_SPACER
          + listCode + AI.Yail.YAIL_CLOSE_COMBINATION;
