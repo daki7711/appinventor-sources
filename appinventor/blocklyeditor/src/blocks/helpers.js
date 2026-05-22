@@ -42,6 +42,9 @@ Blockly.Blocks['helpers_dropdown'] = {
     var db = this.getTopWorkspace().getComponentDatabase();
     var optionList = db.getOptionList(this.key_);
     var tag = db.getInternationalizedOptionListTag(optionList.tag);
+        if (optionList.tag === 'ButtonShape') {
+          tag = 'Shape';
+        }
     var dropdown = new Blockly.FieldInvalidDropdown(
         this.getValidOptions(), this.getInvalidOptions());
 
@@ -134,6 +137,9 @@ Blockly.Blocks['helpers_dropdown'] = {
     db.forEachOptionList(function(optionList) {
       for (var i = 0, option; option = optionList.options[i]; i++) {
         var tag = db.getInternationalizedOptionListTag(optionList.tag);
+        if (optionList.tag === 'ButtonShape') {
+          tag = 'Shape';
+        }
         var key = optionList.tag + option.name;
         var i18nName = db.getInternationalizedOptionName(key, option.name);
         tb.push({
