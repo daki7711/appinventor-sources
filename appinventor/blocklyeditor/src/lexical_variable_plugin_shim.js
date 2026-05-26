@@ -143,6 +143,14 @@ Blockly.LexicalVariable.getEventParam = function (block) {
               && parent.getInputTargetBlock('RETURN') == child) // only body is in scope of names
           || (type === "local_declaration_statement"
               && parent.getInputTargetBlock('STACK') == child) // only body is in scope of names
+          || (type === "local_declaration_expression_letstar"
+              && parent.getInputTargetBlock('RETURN') == child)
+          || (type === "local_declaration_statement_letstar"
+              && parent.getInputTargetBlock('STACK') == child)
+          || (type === "local_declaration_expression_letrec"
+              && parent.getInputTargetBlock('RETURN') == child)
+          || (type === "local_declaration_statement_letrec"
+              && parent.getInputTargetBlock('STACK') == child)
       ) {
         var params = parent.getVars(); // [lyn, 10/13/13] Names from block, not localNames_ instance var
         if (params.indexOf(name) != -1) {

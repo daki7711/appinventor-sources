@@ -812,3 +812,213 @@ Blockly.Blocks['local_mutatorarg'] = {
 
 
 
+
+
+// === Extension for let* and letrec ===
+
+Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT_LETSTAR = "initialize local variables in sequence";
+Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT_LETREC = "initialize local recursive variables";
+
+(function() {
+  var baseStatement = Blockly.Blocks['local_declaration_statement'];
+  var baseExpression = Blockly.Blocks['local_declaration_expression'];
+
+  function createLetStar(isExpression) {
+    var base = isExpression ? baseExpression : baseStatement;
+    var type = isExpression ? 'local_declaration_expression_letstar' : 'local_declaration_statement_letstar';
+    var title = Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT_LETSTAR;
+    var subtitle = "Each variable can use the ones above it";
+
+    Blockly.Blocks[type] = Object.assign({}, base, {
+      title_init: title,
+      subtitle: subtitle,
+      init: function() {
+        this.setColour(Blockly.VARIABLE_CATEGORY_HUE);
+        this.localNames_ = [Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_DEFAULT_NAME];
+        
+        this.appendDummyInput('SUBTITLE_INPUT')
+            .appendField(new Blockly.FieldLabel(this.subtitle));
+        
+        var declInput = this.appendValueInput('DECL0');
+        declInput.appendField(this.title_init)
+                 .appendField(this.parameterFlydown(0), 'VAR0')
+                 .appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_INPUT_TO)
+                 .setAlign(Blockly.inputs.Align.RIGHT);
+
+        if (isExpression) {
+          this.appendInputFromRegistry('indented_input', 'RETURN')
+              .appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_EXPRESSION_IN_RETURN);
+          this.setOutput(true, null);
+          this.setTooltip(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_EXPRESSION_TOOLTIP);
+        } else {
+          this.appendStatementInput('STACK')
+              .appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_IN_DO);
+          this.setPreviousStatement(true);
+          this.setNextStatement(true);
+          this.setTooltip(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TOOLTIP);
+        }
+        
+        this.setMutator(new Blockly.icons.MutatorIcon(['local_mutatorarg'], this));
+        this.lexicalVarPrefix = Blockly.localNamePrefix;
+      },
+      updateDeclarationInputs_: function(names, inits) {
+        var numDecls = this.inputList.length - 2; // subtitle and body
+        var thisBlock = this;
+        Blockly.FieldParameterFlydown.withChangeHanderDisabled(function() {
+          for (var i = 0; i < numDecls; i++) {
+            thisBlock.removeInput('DECL' + i);
+          }
+        });
+        this.localNames_ = names;
+        for (var i = 0; i < names.length; i++) {
+          var declInput = this.appendValueInput('DECL' + i);
+          declInput.appendField(this.title_init)
+                   .appendField(this.parameterFlydown(i), 'VAR' + i)
+                   .appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_INPUT_TO)
+                   .setAlign(Blockly.inputs.Align.RIGHT);
+          if (inits && inits[i]) {
+            declInput.connection.connect(inits[i]);
+          }
+        }
+        this.moveInputBefore(this.bodyInputName);
+      },
+      withLexicalVarsAndPrefix: function(child, proc) {
+        var localNames = this.declaredNames();
+        if (this.getInputTargetBlock(this.bodyInputName) == child) {
+          for (var i = 0; i < localNames.length; i++) {
+            proc(localNames[i], this.lexicalVarPrefix);
+          }
+        } else {
+          for (var i = 0; i < localNames.length; i++) {
+            if (this.getInputTargetBlock('DECL' + i) == child) {
+              for (var j = 0; j < i; j++) {
+                proc(localNames[j], this.lexicalVarPrefix);
+              }
+              break;
+            }
+          }
+        }
+      },
+      referenceResults: function(name, prefix, env) {
+        var localDeclNames = this.declaredNames();
+        var initResults = [];
+        var currentEnv = env;
+        for (var i = 0; i < localDeclNames.length; i++) {
+          var init = this.getInputTargetBlock('DECL' + i);
+          if (init) {
+            initResults.push(Blockly.LexicalVariable.referenceResult(init, name, prefix, currentEnv));
+          }
+          currentEnv = currentEnv.concat([localDeclNames[i]]);
+        }
+        var bodyResult = Blockly.LexicalVariable.referenceResult(
+            this.getInputTargetBlock(this.bodyInputName), name, prefix, currentEnv);
+        var nextResults = isExpression ? [] : [Blockly.LexicalVariable.referenceResult(
+            Blockly.LexicalVariable.getNextTargetBlock(this), name, prefix, env)];
+        return initResults.concat([bodyResult]).concat(nextResults);
+      },
+      typeblock: [{ translatedName: title + (isExpression ? " (return)" : "") }]
+    });
+  }
+
+  function createLetRec(isExpression) {
+    var base = isExpression ? baseExpression : baseStatement;
+    var type = isExpression ? 'local_declaration_expression_letrec' : 'local_declaration_statement_letrec';
+    var title = Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT_LETREC;
+    var subtitle = "Variables can use themselves or each other immediately";
+
+    Blockly.Blocks[type] = Object.assign({}, base, {
+      title_init: title,
+      subtitle: subtitle,
+      init: function() {
+        this.setColour(Blockly.VARIABLE_CATEGORY_HUE);
+        this.localNames_ = [Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_DEFAULT_NAME];
+        
+        this.appendDummyInput('SUBTITLE_INPUT')
+            .appendField(new Blockly.FieldLabel(this.subtitle));
+        
+        var declInput = this.appendValueInput('DECL0');
+        declInput.appendField(this.title_init)
+                 .appendField(this.parameterFlydown(0), 'VAR0')
+                 .appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_INPUT_TO)
+                 .setAlign(Blockly.inputs.Align.RIGHT);
+
+        if (isExpression) {
+          this.appendInputFromRegistry('indented_input', 'RETURN')
+              .appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_EXPRESSION_IN_RETURN);
+          this.setOutput(true, null);
+          this.setTooltip(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_EXPRESSION_TOOLTIP);
+        } else {
+          this.appendStatementInput('STACK')
+              .appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_IN_DO);
+          this.setPreviousStatement(true);
+          this.setNextStatement(true);
+          this.setTooltip(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TOOLTIP);
+        }
+        
+        this.setMutator(new Blockly.icons.MutatorIcon(['local_mutatorarg'], this));
+        this.lexicalVarPrefix = Blockly.localNamePrefix;
+      },
+      updateDeclarationInputs_: function(names, inits) {
+        var numDecls = this.inputList.length - 2; // subtitle and body
+        var thisBlock = this;
+        Blockly.FieldParameterFlydown.withChangeHanderDisabled(function() {
+          for (var i = 0; i < numDecls; i++) {
+            thisBlock.removeInput('DECL' + i);
+          }
+        });
+        this.localNames_ = names;
+        for (var i = 0; i < names.length; i++) {
+          var declInput = this.appendValueInput('DECL' + i);
+          declInput.appendField(this.title_init)
+                   .appendField(this.parameterFlydown(i), 'VAR' + i)
+                   .appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_INPUT_TO)
+                   .setAlign(Blockly.inputs.Align.RIGHT);
+          if (inits && inits[i]) {
+            declInput.connection.connect(inits[i]);
+          }
+        }
+        this.moveInputBefore(this.bodyInputName);
+      },
+      withLexicalVarsAndPrefix: function(child, proc) {
+        var localNames = this.declaredNames();
+        // Check if child is either the body or one of the DECL initializers
+        var inScope = (this.getInputTargetBlock(this.bodyInputName) == child);
+        if (!inScope) {
+          for (var i = 0; i < localNames.length; i++) {
+            if (this.getInputTargetBlock('DECL' + i) == child) {
+              inScope = true;
+              break;
+            }
+          }
+        }
+        if (inScope) {
+          for (var i = 0; i < localNames.length; i++) {
+            proc(localNames[i], this.lexicalVarPrefix);
+          }
+        }
+      },
+      referenceResults: function(name, prefix, env) {
+        var localDeclNames = this.declaredNames();
+        var newEnv = env.concat(localDeclNames);
+        var initResults = [];
+        for (var i = 0; i < localDeclNames.length; i++) {
+          var init = this.getInputTargetBlock('DECL' + i);
+          if (init) {
+            initResults.push(Blockly.LexicalVariable.referenceResult(init, name, prefix, newEnv));
+          }
+        }
+        var bodyResult = Blockly.LexicalVariable.referenceResult(
+            this.getInputTargetBlock(this.bodyInputName), name, prefix, newEnv);
+        var nextResults = isExpression ? [] : [Blockly.LexicalVariable.referenceResult(
+            Blockly.LexicalVariable.getNextTargetBlock(this), name, prefix, env)];
+        return initResults.concat([bodyResult]).concat(nextResults);
+      },
+      typeblock: [{ translatedName: title + (isExpression ? " (return)" : "") }]
+    });
+  }
+
+  createLetStar(false);
+  createLetStar(true);
+  createLetRec(false);
+  createLetRec(true);
+})();

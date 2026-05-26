@@ -117,15 +117,31 @@ AI.Yail['setVariableCommandAndName'] = function(name){
 }
 
 AI.Yail.forBlock['local_declaration_statement'] = function(block, generator) {
-  return AI.Yail.local_variable(block, generator, false);
+  return AI.Yail.local_variable(block, generator, false, AI.Yail.YAIL_LET);
 };
 
 AI.Yail.forBlock['local_declaration_expression'] = function(block, generator) {
-  return AI.Yail.local_variable(block, generator, true);
+  return AI.Yail.local_variable(block, generator, true, AI.Yail.YAIL_LET);
 };
 
-AI.Yail['local_variable'] = function(block, generator, isExpression) {
-  var code = AI.Yail.YAIL_LET;
+AI.Yail.forBlock['local_declaration_statement_letstar'] = function(block, generator) {
+  return AI.Yail.local_variable(block, generator, false, AI.Yail.YAIL_LETSTAR);
+};
+
+AI.Yail.forBlock['local_declaration_expression_letstar'] = function(block, generator) {
+  return AI.Yail.local_variable(block, generator, true, AI.Yail.YAIL_LETSTAR);
+};
+
+AI.Yail.forBlock['local_declaration_statement_letrec'] = function(block, generator) {
+  return AI.Yail.local_variable(block, generator, false, AI.Yail.YAIL_LETREC);
+};
+
+AI.Yail.forBlock['local_declaration_expression_letrec'] = function(block, generator) {
+  return AI.Yail.local_variable(block, generator, true, AI.Yail.YAIL_LETREC);
+};
+
+AI.Yail['local_variable'] = function(block, generator, isExpression, letType) {
+  var code = letType || AI.Yail.YAIL_LET;
   code += AI.Yail.YAIL_OPEN_COMBINATION + AI.Yail.YAIL_SPACER;
   for(var i=0;block.getFieldValue("VAR" + i);i++){
     code += AI.Yail.YAIL_OPEN_COMBINATION + AI.Yail.YAIL_LOCAL_VAR_TAG + (Blockly.usePrefixInYail ? "local_" : "") + block.getFieldValue("VAR" + i);

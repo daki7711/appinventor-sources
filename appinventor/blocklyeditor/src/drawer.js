@@ -48,6 +48,29 @@ Blockly.Drawer = function(parentWorkspace, opt_options) {
 Blockly.Drawer.PREFIX_ = 'cat_';
 
 /**
+ * Blocks shown directly when opening the Procedures drawer.
+ * @private
+ */
+Blockly.Drawer.PROCEDURE_PRIMARY_BLOCKS_ = [
+  'procedures_defnoreturn',
+  'procedures_defreturn',
+  'procedures_callnoreturn',
+  'procedures_callreturn'
+];
+
+/**
+ * Blocks shown directly when opening the Variables drawer.
+ * @private
+ */
+Blockly.Drawer.VARIABLE_PRIMARY_BLOCKS_ = [
+  'global_declaration',
+  'lexical_variable_get',
+  'lexical_variable_set',
+  'local_declaration_statement',
+  'local_declaration_expression'
+];
+
+/**
  * Build the hierarchical tree of block types.
  * Note: taken from Blockly's toolbox.js
  * @return {!Object} Tree object.
@@ -129,17 +152,17 @@ Blockly.Drawer.prototype.showBuiltin = function(drawerName) {
   }
   var blockSet = this.options.languageTree[drawerName];
   if (drawerName == "cat_Procedures") {
-    var newBlockSet = [];
-    for (var i = 0; i < blockSet.length; i++) {
-      if(!(blockSet[i] == "procedures_callnoreturn" // Include callnoreturn only if at least one defnoreturn declaration
-           && this.workspace_.getProcedureDatabase().voidProcedures == 0)
-         &&
-         !(blockSet[i] == "procedures_callreturn" // Include callreturn only if at least one defreturn declaration
-           && this.workspace_.getProcedureDatabase().returnProcedures == 0)){
-        newBlockSet.push(blockSet[i]);
-      }
-    }
-    blockSet = newBlockSet;
+    this.showProcedurePrimary_(blockSet);
+    return;
+  } else if (drawerName == "cat_ProceduresMore") {
+    this.showProcedureMore_();
+    return;
+  } else if (drawerName == "cat_Variables") {
+    this.showVariablePrimary_(blockSet);
+    return;
+  } else if (drawerName == "cat_VariablesMore") {
+    this.showVariableMore_();
+    return;
   }
 
   if (!blockSet) {
@@ -148,6 +171,118 @@ Blockly.Drawer.prototype.showBuiltin = function(drawerName) {
   Blockly.hideChaff();
   var xmlList = this.blockListToXMLArray(blockSet);
   this.flyout_.show(xmlList);
+};
+
+/**
+ * Show the primary Procedures drawer contents.
+ * @param {!Array<string>} blockSet All block types in the Procedures category.
+ * @private
+ */
+Blockly.Drawer.prototype.showProcedurePrimary_ = function(blockSet) {
+  if (!blockSet) {
+    throw "no such drawer: cat_Procedures";
+  }
+  Blockly.hideChaff();
+  var xmlList = this.blockListToXMLArray(
+      this.filterProcedureBlocks_(blockSet, true));
+  this.flyout_.show(xmlList);
+};
+
+/**
+ * Show procedure blocks that are tucked behind the More button.
+ * @private
+ */
+Blockly.Drawer.prototype.showProcedureMore_ = function() {
+  if (!this.options.languageTree) {
+    this.options.languageTree = Blockly.Drawer.buildTree_();
+  }
+  var blockSet = this.options.languageTree['cat_Procedures'];
+  if (!blockSet) {
+    throw "no such drawer: cat_Procedures";
+  }
+  Blockly.hideChaff();
+  this.flyout_.show(this.blockListToXMLArray(
+      this.filterProcedureBlocks_(blockSet, false)));
+};
+
+/**
+ * Filters procedure block types for the primary or More view.
+ * @param {!Array<string>} blockSet All block types in the Procedures category.
+ * @param {boolean} primaryView Whether to return primary procedure blocks.
+ * @return {!Array<string>}
+ * @private
+ */
+Blockly.Drawer.prototype.filterProcedureBlocks_ = function(blockSet, primaryView) {
+  var procDb = this.workspace_.getProcedureDatabase();
+  var primaryBlocks = Blockly.Drawer.PROCEDURE_PRIMARY_BLOCKS_;
+  var filteredBlockSet = [];
+  for (var i = 0; i < blockSet.length; i++) {
+    var blockType = blockSet[i];
+    var isPrimary = primaryBlocks.indexOf(blockType) != -1;
+    if (primaryView != isPrimary) {
+      continue;
+    }
+    if (blockType == "procedures_callnoreturn" && procDb.voidProcedures == 0) {
+      continue;
+    }
+    if (blockType == "procedures_callreturn" && procDb.returnProcedures == 0) {
+      continue;
+    }
+    filteredBlockSet.push(blockType);
+  }
+  return filteredBlockSet;
+};
+
+/**
+ * Show the primary Variables drawer contents.
+ * @param {!Array<string>} blockSet All block types in the Variables category.
+ * @private
+ */
+Blockly.Drawer.prototype.showVariablePrimary_ = function(blockSet) {
+  if (!blockSet) {
+    throw "no such drawer: cat_Variables";
+  }
+  Blockly.hideChaff();
+  var xmlList = this.blockListToXMLArray(
+      this.filterVariableBlocks_(blockSet, true));
+  this.flyout_.show(xmlList);
+};
+
+/**
+ * Show variable blocks that are tucked behind the More button.
+ * @private
+ */
+Blockly.Drawer.prototype.showVariableMore_ = function() {
+  if (!this.options.languageTree) {
+    this.options.languageTree = Blockly.Drawer.buildTree_();
+  }
+  var blockSet = this.options.languageTree['cat_Variables'];
+  if (!blockSet) {
+    throw "no such drawer: cat_Variables";
+  }
+  Blockly.hideChaff();
+  this.flyout_.show(this.blockListToXMLArray(
+      this.filterVariableBlocks_(blockSet, false)));
+};
+
+/**
+ * Filters variable block types for the primary or More view.
+ * @param {!Array<string>} blockSet All block types in the Variables category.
+ * @param {boolean} primaryView Whether to return primary variable blocks.
+ * @return {!Array<string>}
+ * @private
+ */
+Blockly.Drawer.prototype.filterVariableBlocks_ = function(blockSet, primaryView) {
+  var primaryBlocks = Blockly.Drawer.VARIABLE_PRIMARY_BLOCKS_;
+  var filteredBlockSet = [];
+  for (var i = 0; i < blockSet.length; i++) {
+    var blockType = blockSet[i];
+    var isPrimary = primaryBlocks.indexOf(blockType) != -1;
+    if (primaryView == isPrimary) {
+      filteredBlockSet.push(blockType);
+    }
+  }
+  return filteredBlockSet;
 };
 
 /**
