@@ -816,8 +816,12 @@ Blockly.Blocks['local_mutatorarg'] = {
 
 // === Extension for let* and letrec ===
 
-Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT_LETSTAR = "initialize local variables in sequence";
-Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT_LETREC = "initialize local recursive variables";
+Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT_LETSTAR = "initialize sequential local variables";
+Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT_LETREC = "initialize recursive local variables";
+Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TOOLTIP_LETSTAR = "Allows you to create local variables in sequence, where each variable can use the ones defined above it, for use in the 'do' part.";
+Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_EXPRESSION_TOOLTIP_LETSTAR = "Allows you to create local variables in sequence, where each variable can use the ones defined above it, to return a result.";
+Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TOOLTIP_LETREC = "Allows you to create recursive local variables that can refer to themselves or each other immediately, for use in the 'do' part.";
+Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_EXPRESSION_TOOLTIP_LETREC = "Allows you to create recursive local variables that can refer to themselves or each other immediately, to return a result.";
 
 (function() {
   var baseStatement = Blockly.Blocks['local_declaration_statement'];
@@ -827,7 +831,7 @@ Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT_LETREC = "initialize loc
     var base = isExpression ? baseExpression : baseStatement;
     var type = isExpression ? 'local_declaration_expression_letstar' : 'local_declaration_statement_letstar';
     var title = Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT_LETSTAR;
-    var subtitle = "Each variable can use the ones above it";
+    var subtitle = "Sequential Local Variables";
 
     Blockly.Blocks[type] = Object.assign({}, base, {
       title_init: title,
@@ -840,7 +844,7 @@ Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT_LETREC = "initialize loc
             .appendField(new Blockly.FieldLabel(this.subtitle));
         
         var declInput = this.appendValueInput('DECL0');
-        declInput.appendField(this.title_init)
+        declInput.appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT)
                  .appendField(this.parameterFlydown(0), 'VAR0')
                  .appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_INPUT_TO)
                  .setAlign(Blockly.inputs.Align.RIGHT);
@@ -849,13 +853,13 @@ Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT_LETREC = "initialize loc
           this.appendInputFromRegistry('indented_input', 'RETURN')
               .appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_EXPRESSION_IN_RETURN);
           this.setOutput(true, null);
-          this.setTooltip(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_EXPRESSION_TOOLTIP);
+          this.setTooltip(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_EXPRESSION_TOOLTIP_LETSTAR);
         } else {
           this.appendStatementInput('STACK')
               .appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_IN_DO);
           this.setPreviousStatement(true);
           this.setNextStatement(true);
-          this.setTooltip(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TOOLTIP);
+          this.setTooltip(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TOOLTIP_LETSTAR);
         }
         
         this.setMutator(new Blockly.icons.MutatorIcon(['local_mutatorarg'], this));
@@ -872,7 +876,7 @@ Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT_LETREC = "initialize loc
         this.localNames_ = names;
         for (var i = 0; i < names.length; i++) {
           var declInput = this.appendValueInput('DECL' + i);
-          declInput.appendField(this.title_init)
+          declInput.appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT)
                    .appendField(this.parameterFlydown(i), 'VAR' + i)
                    .appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_INPUT_TO)
                    .setAlign(Blockly.inputs.Align.RIGHT);
@@ -924,7 +928,7 @@ Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT_LETREC = "initialize loc
     var base = isExpression ? baseExpression : baseStatement;
     var type = isExpression ? 'local_declaration_expression_letrec' : 'local_declaration_statement_letrec';
     var title = Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT_LETREC;
-    var subtitle = "Variables can use themselves or each other immediately";
+    var subtitle = "Recursive Local Variables";
 
     Blockly.Blocks[type] = Object.assign({}, base, {
       title_init: title,
@@ -937,7 +941,7 @@ Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT_LETREC = "initialize loc
             .appendField(new Blockly.FieldLabel(this.subtitle));
         
         var declInput = this.appendValueInput('DECL0');
-        declInput.appendField(this.title_init)
+        declInput.appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT)
                  .appendField(this.parameterFlydown(0), 'VAR0')
                  .appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_INPUT_TO)
                  .setAlign(Blockly.inputs.Align.RIGHT);
@@ -946,13 +950,13 @@ Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT_LETREC = "initialize loc
           this.appendInputFromRegistry('indented_input', 'RETURN')
               .appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_EXPRESSION_IN_RETURN);
           this.setOutput(true, null);
-          this.setTooltip(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_EXPRESSION_TOOLTIP);
+          this.setTooltip(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_EXPRESSION_TOOLTIP_LETREC);
         } else {
           this.appendStatementInput('STACK')
               .appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_IN_DO);
           this.setPreviousStatement(true);
           this.setNextStatement(true);
-          this.setTooltip(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TOOLTIP);
+          this.setTooltip(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TOOLTIP_LETREC);
         }
         
         this.setMutator(new Blockly.icons.MutatorIcon(['local_mutatorarg'], this));
@@ -969,7 +973,7 @@ Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT_LETREC = "initialize loc
         this.localNames_ = names;
         for (var i = 0; i < names.length; i++) {
           var declInput = this.appendValueInput('DECL' + i);
-          declInput.appendField(this.title_init)
+          declInput.appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_TITLE_INIT)
                    .appendField(this.parameterFlydown(i), 'VAR' + i)
                    .appendField(Blockly.Msg.LANG_VARIABLES_LOCAL_DECLARATION_INPUT_TO)
                    .setAlign(Blockly.inputs.Align.RIGHT);
